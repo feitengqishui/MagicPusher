@@ -1,4 +1,3 @@
-
 name: Build MagicPusher APK
 
 on:
@@ -20,18 +19,25 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
       - name: Install Android SDK
         run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          sdkmanager --sdk_root="$ANDROID_HOME" --licenses
+          sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
 
       - name: Extract project
         run: |
           mkdir extracted
           unzip -q MagicPusher_AndroidProject_0.3.0.zip -d extracted
           PROJECT_DIR="$(dirname "$(find extracted -name settings.gradle -print -quit)")"
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "Cannot find settings.gradle"
+            exit 1
+          fi
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       - name: Build APK
